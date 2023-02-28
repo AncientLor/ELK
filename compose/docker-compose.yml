@@ -35,7 +35,7 @@ services:
           unzip config/certs/certs.zip -d config/certs;
         fi;
         echo "Setting file permissions"
-        chown -R root:root config/certs;
+        chown -R root:1000 config/certs;
         find . -type d -exec chmod 754 \{\} \;;
         find . -type f -exec chmod 644 \{\} \;;
         echo "Waiting for Elasticsearch availability";
@@ -63,6 +63,7 @@ services:
     ports:
       - ${ES_PORT}:9200
     environment:
+      - discovery.type=single-node
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - bootstrap.memory_lock=true
       - xpack.security.enabled=true
@@ -124,6 +125,7 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
+    user: "1000"
     image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
     container_name: logstash
     hostname: logstash
