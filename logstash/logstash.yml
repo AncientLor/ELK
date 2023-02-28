@@ -1,0 +1,10 @@
+http.host: "0.0.0.0"
+xpack.monitoring.enabled: false
+path.config: "/usr/share/logstash/pipeline/logstash.conf"
+config.reload.automatic: true
+config.reload.interval: 10s
+#xpack.monitoring.elasticsearch.hosts: [ "https://elasticsearch:9200" ]
+#xpack.monitoring.elasticsearch.username: "elastic"
+#xpack.monitoring.elasticsearch.password: 
+#xpack.monitoring.elasticsearch.ssl.certificate_authority: "/usr/share/logstash/config/certs/ca/ca.crt"
+#xpack.monitoring.elasticsearch.ssl.verification_mode: none

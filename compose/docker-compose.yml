@@ -36,8 +36,8 @@ services:
         fi;
         echo "Setting file permissions"
         chown -R root:root config/certs;
-        find . -type d -exec chmod 750 \{\} \;;
-        find . -type f -exec chmod 640 \{\} \;;
+        find . -type d -exec chmod 754 \{\} \;;
+        find . -type f -exec chmod 644 \{\} \;;
         echo "Waiting for Elasticsearch availability";
         until curl -s --cacert config/certs/ca/ca.crt https://elasticsearch:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
         echo "Setting kibana_system password";
@@ -131,11 +131,12 @@ services:
       - certs:/usr/share/logstash/config/certs
       - /var/log:/usr/share/var/log:ro
       - ~/.elk/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
-    command: bin/logstash -f /usr/share/logstash/pipeline/logstash.conf --config.reload.automatic
+      - ~/.elk/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+    command: bin/logstash -f /usr/share/logstash/pipeline/logstash.conf
     mem_limit: ${MEM_LIMIT}
     ports:
       - 5044:5044
-      - 5045:5045
+      - 5000:5000
 
 volumes:
   certs:
