@@ -3,8 +3,19 @@
 ## Setup Host Environment
 
 ```
-sudo sysctl -w vm.max_map_count = 262144
-sudo vim /etc/sysctl.conf >> vm.max_map_count = 262144
+sudo apt-get update
+sudo apt-get install \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+
+
+```
+
+```
+sudo sysctl -w vm.max_map_count=262144
+sudo echo "vm.max_map_count = 262144" >> /etc/sysctl.conf
 ```
 
 ## Initialize Containers
