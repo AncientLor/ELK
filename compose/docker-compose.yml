@@ -49,12 +49,13 @@ services:
       interval: 1s
       timeout: 5s
       retries: 120
+    networks:
+      - elknet
 
   elasticsearch:
     depends_on:
       setup:
         condition: service_healthy
-    user: "0"
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     container_name: elasticsearch
     hostname: elasticsearch
@@ -92,6 +93,8 @@ services:
       interval: 10s
       timeout: 10s
       retries: 120
+    networks:
+      - elknet
 
   kibana:
     depends_on:
@@ -122,6 +125,8 @@ services:
       interval: 10s
       timeout: 10s
       retries: 120
+    networks:
+      - elknet
 
   logstash:
     depends_on:
@@ -141,6 +146,8 @@ services:
     ports:
       - 5044:5044
       - 5000:5000
+    networks:
+      - elknet
 
 volumes:
   certs:
@@ -149,3 +156,16 @@ volumes:
     driver: local
   kibanadata:
     driver: local
+
+networks:
+  elknet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1
+          aux_addresses:
+            setup: 172.18.0.4
+            elasticsearch: 172.18.0.5
+            logstash: 172.18.0.7
+            kibana: 172.18.0.6
