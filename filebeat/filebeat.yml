@@ -10,6 +10,29 @@
 # For more available modules and options, please see the filebeat.reference.yml sample
 # configuration file.
 
+# ------------------------------ Logstash Output -------------------------------
+output.logstash:
+  # The Logstash hosts
+  hosts: ["elkserver:5044"]
+
+  # Optional SSL. By default is off.
+  # List of root certificates for HTTPS server verifications
+  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
+
+  # Certificate for SSL client authentication
+  #ssl.certificate: "/etc/pki/client/cert.pem"
+
+  # Client Certificate Key
+  #ssl.key: "/etc/pki/client/cert.key"
+
+# ================================= Processors =================================
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_cloud_metadata: ~
+  - add_docker_metadata: ~
+  - add_kubernetes_metadata: ~
+
 # ============================== Filebeat inputs ===============================
 
 filebeat.inputs:
@@ -19,23 +42,23 @@ filebeat.inputs:
 # Below are the input specific configurations.
 
 # filestream is an input for collecting log messages from files.
-- type: filestream
+#- type: filestream
 
   # Unique ID among all inputs, an ID is required.
-  id: auth-filestream
+#  id: auth-filestream
 
   # Change to true to enable this input configuration.
-  enabled: true
+#  enabled: true
 
   # Paths that should be crawled and fetched. Glob based paths.
-  paths:
-    - /usr/share/var/log/auth.log
+#  paths:
+#    - /usr/share/var/log/auth.log
 
-- type: filestream
-  id: syslog-filestream
-  enabled: true
-  paths:
-    - /usr/share/var/log/syslog
+#- type: filestream
+#  id: syslog-filestream
+#  enabled: true
+#  paths:
+#    - /usr/share/var/log/syslog
 
 - type: filestream
   id: messages-filestream
@@ -78,13 +101,83 @@ filebeat.config.modules:
   # Period on which files under path should be checked for changes
   #reload.period: 10s
 
+
+#==========================  Modules configuration =============================
+filebeat.modules:
+
+#-------------------------------- System Module --------------------------------
+- module: system
+  # Syslog
+  syslog:
+    enabled: true
+
+    # Set custom paths for the log files. If left empty,
+    # Filebeat will choose the paths depending on your OS.
+    var.paths:
+      - /usr/share/var/log/syslog
+
+    # Input configuration (advanced). Any input configuration option
+    # can be added under this section.
+    #input:
+
+  # Authorization logs
+  auth:
+    enabled: true
+
+    # Set custom paths for the log files. If left empty,
+    # Filebeat will choose the paths depending on your OS.
+    var.paths:
+      - /usr/share/var/log/auth.log
+
+    # Input configuration (advanced). Any input configuration option
+    # can be added under this section.
+    #input:
+
+#-------------------------------- Apache Module --------------------------------
+#- module: apache
+  # Access logs
+  #access:
+    #enabled: true
+
+    # Set custom paths for the log files. If left empty,
+    # Filebeat will choose the paths depending on your OS.
+    #var.paths:
+
+    # Input configuration (advanced). Any input configuration option
+    # can be added under this section.
+    #input:
+
+  # Error logs
+  #error:
+    #enabled: true
+
+    # Set custom paths for the log files. If left empty,
+    # Filebeat will choose the paths depending on your OS.
+    #var.paths:
+
+    # Input configuration (advanced). Any input configuration option
+    # can be added under this section.
+    #input:
+
+#-------------------------------- Auditd Module --------------------------------
+#- module: auditd
+  #log:
+    #enabled: true
+
+    # Set custom paths for the log files. If left empty,
+    # Filebeat will choose the paths depending on your OS.
+    #var.paths:
+
+    # Input configuration (advanced). Any input configuration option
+    # can be added under this section.
+    #input:
+
 # ======================= Elasticsearch template setting =======================
 
 setup.template.settings:
   index.number_of_shards: 1
   #index.codec: best_compression
   #_source.enabled: false
-
 
 # ================================== General ===================================
 
@@ -159,29 +252,6 @@ setup.kibana:
   #api_key: "id:api_key"
   #username: "elastic"
   #password: "changeme"
-
-# ------------------------------ Logstash Output -------------------------------
-output.logstash:
-  # The Logstash hosts
-  hosts: ["192.53.124.160:5044"]
-
-  # Optional SSL. By default is off.
-  # List of root certificates for HTTPS server verifications
-  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
-
-  # Certificate for SSL client authentication
-  #ssl.certificate: "/etc/pki/client/cert.pem"
-
-  # Client Certificate Key
-  #ssl.key: "/etc/pki/client/cert.key"
-
-# ================================= Processors =================================
-processors:
-  - add_host_metadata:
-      when.not.contains.tags: forwarded
-  - add_cloud_metadata: ~
-  - add_docker_metadata: ~
-  - add_kubernetes_metadata: ~
 
 # ================================== Logging ===================================
 
