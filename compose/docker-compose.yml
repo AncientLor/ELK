@@ -100,7 +100,6 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
-    user: "0"
     image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
     container_name: kibana
     hostname: kibana
@@ -164,8 +163,3 @@ networks:
       config:
         - subnet: 172.18.0.0/16
           gateway: 172.18.0.1
-          aux_addresses:
-            setup: 172.18.0.4
-            elasticsearch: 172.18.0.5
-            logstash: 172.18.0.7
-            kibana: 172.18.0.6
