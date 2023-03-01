@@ -22,16 +22,27 @@ filebeat.inputs:
 - type: filestream
 
   # Unique ID among all inputs, an ID is required.
-  id: my-filestream-id
+  id: auth-filestream
 
   # Change to true to enable this input configuration.
   enabled: true
 
   # Paths that should be crawled and fetched. Glob based paths.
   paths:
-    - /usr/share/var/log/*.log
+    - /usr/share/var/log/auth.log
+
+- type: filestream
+  id: syslog-filestream
+  enabled: true
+  paths:
     - /usr/share/var/log/syslog
-    #- c:\programdata\elasticsearch\logs\*
+
+- type: filestream
+  id: messages-filestream
+  ebabled: true
+  paths:
+    - /usr/share/var/log/messages
+
 
   # Exclude lines. A list of regular expressions to match. It drops the lines that are
   # matching any regular expression from the list.
@@ -152,7 +163,7 @@ setup.kibana:
 # ------------------------------ Logstash Output -------------------------------
 output.logstash:
   # The Logstash hosts
-  hosts: ["194.195.216.72:5044"]
+  hosts: ["192.53.124.160:5044"]
 
   # Optional SSL. By default is off.
   # List of root certificates for HTTPS server verifications
