@@ -7,20 +7,20 @@ if [[ $(id -u) -ne 0 ]]; then
   exit
 fi
 
-# Check if elkserver host exists
+# Check if elasticsearch host exists
 
-ELKSERVER=$(getent hosts | grep elkserver);
+ELASTICSEARCH=$(getent hosts | grep elasticsearch);
 
-if [ x${ELKSERVER} == x ]; then
-    echo "Add elkserver to /etc/hosts";
+if [ x${ELASTICSEARCH} == x ]; then
+    echo "Add elasticsearch to /etc/hosts";
     exit 1;
 fi
 
 mkdir ~/.elk/certs;
 
-scp root@elkserver:/var/lib/docker/volumes/compose_certs/_data/ca.zip ~/.elk/certs/ca.zip;
+scp root@elasticsearch:/var/lib/docker/volumes/compose_certs/_data/ca.zip ~/.elk/certs/ca.zip;
 
-scp root@elkserver:/var/lib/docker/volumes/compose_certs/_data/certs.zip ~/.elk/certs/certs.zip;
+scp root@elasticsearch:/var/lib/docker/volumes/compose_certs/_data/certs.zip ~/.elk/certs/certs.zip;
 
 apt update && apt install -y unzip;
 
@@ -48,19 +48,19 @@ fi
 
 apt install filebeat;
 
-sed -e 's/output.elasticsearch:/#output.elasticsearch:/; s/hosts: \["localhost:9200"\]/#hosts: \["localhost:9200"\]/; s/#output.logstash:/output.logstash:/; s/#hosts: \["localhost:5044"\]/hosts: \["elkserver:5044"\]/;' /etc/filebeat/filebeat.yml;
+sed -i 's/output.elasticsearch:/#output.elasticsearch:/; s/hosts: \["localhost:9200"\]/#hosts: \["localhost:9200"\]/; s/#output.logstash:/output.logstash:/; s/#hosts: \["localhost:5044"\]/hosts: \["elasticsearch:5044"\]/;' /etc/filebeat/filebeat.yml;
 
 filebeat modules enable system && filebeat modules list;
 
 filebeat setup --pipelines --modules system;
 
-filebeat setup --index-management -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=["https://elkserver:9200"]' -E 'output.elasticsearch.ssl.certificate_authorities: ["~/.elk/certs/ca.pem"]' -E 'output.elasticsearch.ssl.certificate: "~/.elk/certs/elasticsearch.pem"' -E 'output.elasticsearch.ssl.key: "~/.elk/certs/elasticsearch.key"'
+filebeat setup --index-management -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=["https://elasticsearch:9200"]' -E 'output.elasticsearch.ssl.certificate_authorities: ["~/.elk/certs/ca.pem"]' -E 'output.elasticsearch.ssl.certificate: "~/.elk/certs/elasticsearch.pem"' -E 'output.elasticsearch.ssl.key: "~/.elk/certs/elasticsearch.key"'
 
-filebeat setup -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=["https://elkserver:9200"]' -E 'output.elasticsearch.ssl.certificate_authorities: ["~/.elk/certs/ca.pem"]' -E 'output.elasticsearch.ssl.certificate: "~/.elk/certs/elasticsearch.pem"' -E 'output.elasticsearch.ssl.key: "~/.elk/certs/elasticsearch.key"' -E 'setup.kibana.host=elkserver:5601';
+filebeat setup -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=["https://elasticsearch:9200"]' -E 'output.elasticsearch.ssl.certificate_authorities: ["~/.elk/certs/ca.pem"]' -E 'output.elasticsearch.ssl.certificate: "~/.elk/certs/elasticsearch.pem"' -E 'output.elasticsearch.ssl.key: "~/.elk/certs/elasticsearch.key"' -E 'setup.kibana.host=elasticsearch:5601';
 
 systemctl start filebeat && systemctl enable filebeat;
 
-curl -XGET 'https://elkserver:9200/filebeat-*/_search?pretty';
+curl -XGET 'https://elasticsearch:9200/filebeat-*/_search?pretty';
 
 exit;
 
