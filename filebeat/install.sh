@@ -16,15 +16,17 @@ if [ x${ELKSERVER} == x ]; then
     exit 1;
 fi
 
+mkdir ~/.elk/certs;
+
 scp root@elkserver:/var/lib/docker/volumes/compose_certs/_data/ca.zip ~/.elk/certs/ca.zip;
 
 scp root@elkserver:/var/lib/docker/volumes/compose_certs/_data/certs.zip ~/.elk/certs/certs.zip;
 
 apt update && apt install -y unzip;
 
-unzip ~/.elk/certs/ca.zip && mv ~/.elk/certs/ca/ca.crt ~/.elk/certs/ca.crt;
+unzip ~/.elk/certs/ca.zip -d ~/.elk/certs/ && mv ~/.elk/certs/ca/ca.crt ~/.elk/certs/ca.crt;
 
-unzip ~/.elk/certs/certs.zip && mv ~/.elk/certs/elasticsearch/elasticsearch.crt ~/.elk/certs/elasticsearch.crt && mv ~/.elk/certs/elasticsearch/elasticsearch.key ~/.elk/certs/elasticsearch.key;
+unzip ~/.elk/certs/certs.zip -d ~/.elk/certs/ && mv ~/.elk/certs/elasticsearch/elasticsearch.crt ~/.elk/certs/elasticsearch.crt && mv ~/.elk/certs/elasticsearch/elasticsearch.key ~/.elk/certs/elasticsearch.key;
 
 FILE1=~/.elk/certs/ca.crt
 
