@@ -54,9 +54,9 @@ filebeat modules enable system && filebeat modules list;
 
 filebeat setup --pipelines --modules system;
 
-filebeat setup --index-management -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=["https://elasticsearch:9200"]' -E 'output.elasticsearch.ssl.certificate_authorities: ["~/.elk/certs/ca.pem"]' -E 'output.elasticsearch.ssl.certificate: "~/.elk/certs/elasticsearch.pem"' -E 'output.elasticsearch.ssl.key: "~/.elk/certs/elasticsearch.key"'
+filebeat setup --index-management -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=["https://elasticsearch:9200"]' -E 'output.elasticsearch.ssl.certificate_authorities: ["~/.elk/certs/ca.crt"]' -E 'output.elasticsearch.ssl.certificate: "~/.elk/certs/elasticsearch.crt"' -E 'output.elasticsearch.ssl.key: "~/.elk/certs/elasticsearch.key"'
 
-filebeat setup -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=["https://elasticsearch:9200"]' -E 'output.elasticsearch.ssl.certificate_authorities: ["~/.elk/certs/ca.pem"]' -E 'output.elasticsearch.ssl.certificate: "~/.elk/certs/elasticsearch.pem"' -E 'output.elasticsearch.ssl.key: "~/.elk/certs/elasticsearch.key"' -E 'setup.kibana.host=elasticsearch:5601';
+filebeat setup -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=["https://elasticsearch:9200"]' -E 'output.elasticsearch.ssl.certificate_authorities: ["~/.elk/certs/ca.crt"]' -E 'output.elasticsearch.ssl.certificate: "~/.elk/certs/elasticsearch.crt"' -E 'output.elasticsearch.ssl.key: "~/.elk/certs/elasticsearch.key"' -E 'setup.kibana.host=elasticsearch:5601';
 
 systemctl start filebeat && systemctl enable filebeat;
 
