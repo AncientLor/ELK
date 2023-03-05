@@ -16,16 +16,35 @@ if [ x${ELKSERVER} == x ]; then
     exit 1;
 fi
 
-FILE=~/.elk/certs/ca.crt
+scp root@elkserver:/var/lib/docker/volumes/compose_certs/_data/ca.zip ~/.elk/certs/ca.zip;
 
-if [ -f "$FILE" ]; then
-    echo "Certs found... Proceeding.";
+scp root@elkserver:/var/lib/docker/volumes/compose_certs/_data/certs.zip ~/.elk/certs/certs.zip;
+
+apt update && apt install -y unzip;
+
+unzip ~/.elk/certs/ca.zip && mv ~/.elk/certs/ca/ca.crt ~/.elk/certs/ca.crt;
+
+unzip ~/.elk/certs/certs.zip && mv ~/.elk/certs/elasticsearch/elasticsearch.crt ~/.elk/certs/elasticsearch.crt && mv ~/.elk/certs/elasticsearch/elasticsearch.key ~/.elk/certs/elasticsearch.key;
+
+FILE1=~/.elk/certs/ca.crt
+
+if [ -f "$FILE1" ]; then
+    echo "CA found... Proceeding.";
 else
-    echo "$FILE not found. Please add certs to ~/.elk/certs";
+    echo "CA not found. Please add certs to ~/.elk/certs";
     exit 1;
 fi
 
-apt update && apt install filebeat;
+FILE2=~/.elk/certs/elasticsearch.crt
+
+if [ -f "$FILE2" ]; then
+    echo "Certs found... Proceeding.";
+else
+    echo "Certs not found. Please add certs to ~/.elk/certs";
+    exit 1;
+fi
+
+apt install filebeat;
 
 sed -e 's/output.elasticsearch:/#output.elasticsearch:/; s/hosts: \["localhost:9200"\]/#hosts: \["localhost:9200"\]/; s/#output.logstash:/output.logstash:/; s/#hosts: \["localhost:5044"\]/hosts: \["elkserver:5044"\]/;' /etc/filebeat/filebeat.yml;
 
