@@ -1,5 +1,8 @@
 #! /bin/bash
 
+### NOT FINISHED YET ###
+### RUN AT OWN RISK  ###
+
 # Check if user has sudo permissions
 
 if [[ $(id -u) -ne 0 ]]; then
@@ -16,19 +19,19 @@ if [ x${ELASTICSEARCH} == x ]; then
     exit 1;
 fi
 
-mkdir ~/.elk/certs;
+mkdir /root/.elk/certs;
 
-scp root@elasticsearch:/var/lib/docker/volumes/compose_certs/_data/ca.zip ~/.elk/certs/ca.zip;
+scp root@elasticsearch:/var/lib/docker/volumes/compose_certs/_data/ca.zip /root/.elk/certs/ca.zip;
 
-scp root@elasticsearch:/var/lib/docker/volumes/compose_certs/_data/certs.zip ~/.elk/certs/certs.zip;
+scp root@elasticsearch:/var/lib/docker/volumes/compose_certs/_data/certs.zip /root/.elk/certs/certs.zip;
 
 apt update && apt install -y unzip;
 
-unzip ~/.elk/certs/ca.zip -d ~/.elk/certs/ && mv ~/.elk/certs/ca/ca.crt ~/.elk/certs/ca.crt;
+unzip /root/.elk/certs/ca.zip -d /root/.elk/certs && mv /root/.elk/certs/ca/ca.crt /root/.elk/certs;
 
-unzip ~/.elk/certs/certs.zip -d ~/.elk/certs/ && mv ~/.elk/certs/elasticsearch/elasticsearch.crt ~/.elk/certs/elasticsearch.crt && mv ~/.elk/certs/elasticsearch/elasticsearch.key ~/.elk/certs/elasticsearch.key;
+unzip /root/.elk/certs/certs.zip -d /root/.elk/certs && mv /root/.elk/certs/elasticsearch/elasticsearch* /root/.elk/certs;
 
-FILE1=~/.elk/certs/ca.crt
+FILE1="/root/.elk/certs/ca.crt"
 
 if [ -f "$FILE1" ]; then
     echo "CA found... Proceeding.";
@@ -37,7 +40,7 @@ else
     exit 1;
 fi
 
-FILE2=~/.elk/certs/elasticsearch.crt
+FILE2="/root/.elk/certs/elasticsearch.crt"
 
 if [ -f "$FILE2" ]; then
     echo "Certs found... Proceeding.";
@@ -46,21 +49,35 @@ else
     exit 1;
 fi
 
-apt install filebeat;
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add -;
 
-sed -i 's/output.elasticsearch:/#output.elasticsearch:/; s/hosts: \["localhost:9200"\]/#hosts: \["localhost:9200"\]/; s/#output.logstash:/output.logstash:/; s/#hosts: \["localhost:5044"\]/hosts: \["elasticsearch:5044"\]/;' /etc/filebeat/filebeat.yml;
+echo "deb https://artifacts.elastic.co/packages/8.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-8.x.list;
 
-filebeat modules enable system && filebeat modules list;
+apt-get update && apt-get install -y filebeat;
+
+filebeat setup \
+        -E "output.elasticsearch.hosts=["https://elasticsearch:9200"]" \
+        -E "output.elasticsearch.ssl.certificate_authorities=["/root/.elk/certs/ca.crt"]" \
+        -E "output.elasticsearch.ssl.certificate:=/root/.elk/certs/elasticsearch.crt" \
+        -E "output.elasticsearch.ssl.key=/root/.elk/certs/elasticsearch.key";
+
+filebeat modules enable system;
+
+filebeat setup \
+        -M "system.syslog.var.paths=[/var/log/syslog]" \
+        -M "system.syslog.enabled=true" \
+        -M "system.auth.enabled=true" \
+        -M "system.auth.var.paths=[/var/log/auth.log]";
+
+filebeat setup --index-management;
 
 filebeat setup --pipelines --modules system;
 
-filebeat setup --index-management -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=["https://elasticsearch:9200"]' -E 'output.elasticsearch.ssl.certificate_authorities: ["~/.elk/certs/ca.crt"]' -E 'output.elasticsearch.ssl.certificate: "~/.elk/certs/elasticsearch.crt"' -E 'output.elasticsearch.ssl.key: "~/.elk/certs/elasticsearch.key"'
-
-filebeat setup -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=["https://elasticsearch:9200"]' -E 'output.elasticsearch.ssl.certificate_authorities: ["~/.elk/certs/ca.crt"]' -E 'output.elasticsearch.ssl.certificate: "~/.elk/certs/elasticsearch.crt"' -E 'output.elasticsearch.ssl.key: "~/.elk/certs/elasticsearch.key"' -E 'setup.kibana.host=elasticsearch:5601';
+#filebeat setup -E output.elasticsearch.hosts=["https://elasticsearch:9200"] -E output.elasticsearch.ssl.certificate_authorities=["~/.elk/certs/ca.crt"] -E output.elasticsearch.ssl.certificate:=/root/.elk/certs/elasticsearch.crt -E output.elasticsearch.ssl.key=/root/.elk/certs/elasticsearch.key
 
 systemctl start filebeat && systemctl enable filebeat;
 
-curl -XGET 'https://elasticsearch:9200/filebeat-*/_search?pretty';
+#curl -XGET 'https://elasticsearch:9200/filebeat-*/_search?pretty';
 
 exit;
 
